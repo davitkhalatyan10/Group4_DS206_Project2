@@ -74,6 +74,12 @@ CREATE TABLE DimTerritories (
     ExpirationDate DATE
 );
 
+CREATE TABLE Dim_SOR (
+    SORKey INT IDENTITY PRIMARY KEY,
+    StagingTableName NVARCHAR(255) NOT NULL,
+    SurrogateKeyColumn NVARCHAR(255) NOT NULL
+);
+
 CREATE TABLE FactOrders (
     OrderKey INT IDENTITY PRIMARY KEY,
     OrderID INT NOT NULL,
