@@ -17,11 +17,13 @@ def get_db_connection(config_path: str) -> pyodbc.Connection:
     
     conn_str = (
         f"DRIVER={{ODBC Driver 17 for SQL Server}};"
-        f"SERVER={config['sql_server']['host']};"
+        f"SERVER={config['sql_server']['host']},{config['sql_server']['port']};"  # Added port here
         f"DATABASE={config['sql_server']['database']};"
         f"UID={config['sql_server']['user']};"
         f"PWD={config['sql_server']['password']}"
     )
+    
+    return pyodbc.connect(conn_str)
 
 def read_sql_file(file_path: str) -> str:
     """
