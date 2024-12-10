@@ -37,3 +37,31 @@ def read_sql_file(file_path: str) -> str:
     with open(file_path, 'r') as file:
         return file.read()
 
+def execute_sql(connection: pyodbc.Connection, sql_script: str, params: Optional[dict] = None) -> bool:
+    """
+    Execute SQL script with optional parameters
+    
+    Args:
+        connection: Database connection
+        sql_script: SQL script to execute
+        params: Optional parameters for SQL script
+    Returns:
+        bool: True if successful, False if failed
+    """
+    try:
+        cursor = connection.cursor()
+        
+        if params:
+            # Replace parameters in SQL script
+            for key, value in params.items():
+                sql_script = sql_script.replace(f"${key}$", str(value))
+        
+        cursor.execute(sql_script)
+        connection.commit()
+        cursor.close()
+        return True
+        
+    except Exception as e:
+        print(f"Error executing SQL: {str(e)}")
+        connection.rollback()
+        return False
