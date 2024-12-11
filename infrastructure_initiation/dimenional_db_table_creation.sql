@@ -159,6 +159,33 @@ CREATE TABLE FactOrders (
     TerritoryID VARCHAR(255)
 );
 
+
+CREATE TABLE fact_error(
+    FactOrders_ID_SK_PK INT IDENTITY PRIMARY KEY,
+    staging_raw_id INT,                         
+	Dim_SOR_ID INT,
+    OrderID_NK VARCHAR(255),
+    ProductID VARCHAR(255),
+    UnitPrice VARCHAR(255),
+    Quantity VARCHAR(255),
+    Discount VARCHAR(255),
+    CustomerID VARCHAR(255),
+    EmployeeID VARCHAR(255),
+    OrderDate VARCHAR(255),
+    RequiredDate VARCHAR(255),
+    ShippedDate VARCHAR(255),
+    ShipVia VARCHAR(255),
+    Freight VARCHAR(255),
+    ShipName VARCHAR(255),
+    ShipAddress VARCHAR(255),
+    ShipCity VARCHAR(255),
+    ShipRegion VARCHAR(255),
+    ShipPostalCode VARCHAR(255),
+    ShipCountry VARCHAR(255),
+    TerritoryID VARCHAR(255)
+);
+
+
 CREATE TABLE Dim_SOR (
     Dim_SOR_ID_SK_PK INT IDENTITY PRIMARY KEY,  
     staging_raw_id INT,                         
