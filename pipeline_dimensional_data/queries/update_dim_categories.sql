@@ -1,20 +1,42 @@
-USE $(DatabaseName);
+USE {database_name};
 GO
 
-MERGE INTO DimCategories AS target
+MERGE INTO {schema}.DimCategories AS target
 USING (
     SELECT
-        staging_raw_id,
-        CategoryID,
-        CategoryName
-    FROM StagingCategories
+        sc.staging_raw_id,
+        sc.CategoryID,
+        sc.CategoryName,
+        sc.Description,
+        ds.SORKey
+    FROM {schema}.StagingCategories sc
+    JOIN {schema}.Dim_SOR ds
+        ON ds.StagingTableName = 'StagingCategories'
 ) AS source
 ON target.CategoryID = source.CategoryID
 
 WHEN MATCHED THEN
-    UPDATE SET target.CategoryName = source.CategoryName
+    UPDATE SET
+        target.CategoryName = source.CategoryName
 
 WHEN NOT MATCHED BY TARGET
 THEN
-    INSERT (CategoryID, CategoryName)
-    VALUES (source.CategoryID, source.CategoryName);
+    INSERT (
+        CategoryID,
+        CategoryName,
+        Description,
+        SORKey,
+        StagingRawID
+    )
+    VALUES (
+        source.CategoryID,
+        source.CategoryName,
+        source.Description,
+        source.SORKey,
+        source.staging_raw_id
+    )
+
+WHEN NOT MATCHED BY SOURCE
+THEN
+    DELETE;
+GO

@@ -1,31 +1,31 @@
-USE $(DatabaseName);
+USE {database_name};
 GO
 
-MERGE INTO DimEmployees AS target
-USING (
-    SELECT
-        staging_raw_id,
-        EmployeeID,
-        LastName,
-        FirstName,
-        HireDate,
-        TerminationDate
-    FROM StagingEmployees
-) AS source
-ON target.EmployeeID = source.EmployeeID
+DECLARE @Today DATE = CONVERT(DATE, GETDATE());
+DECLARE @Yesterday DATE = CONVERT(DATE, DATEADD(DAY, -1, @Today));
 
-WHEN MATCHED THEN
-    UPDATE SET
-        target.LastName = source.LastName,
-        target.FirstName = source.FirstName,
-        target.HireDate = source.HireDate,
-        target.TerminationDate = source.TerminationDate
-
-WHEN NOT MATCHED BY TARGET
-THEN
-    INSERT (EmployeeID, LastName, FirstName, HireDate, TerminationDate)
-    VALUES (source.EmployeeID, source.LastName, source.FirstName, source.HireDate, source.TerminationDate)
-
-WHEN NOT MATCHED BY SOURCE
-THEN
-    DELETE;
+INSERT INTO {schema}.DimEmployees (EmployeeID_NK, EmployeeName, Position, Department, HireDate, EffectiveDate, EndDate, IsCurrent)
+SELECT EmployeeID, EmployeeName, Position, Department, HireDate, @Today, NULL, 1
+FROM (
+    MERGE {schema}.DimEmployees AS DST
+    USING {schema}.Employees AS SRC
+    ON (SRC.EmployeeID = DST.EmployeeID_NK)
+    WHEN NOT MATCHED
+    THEN
+        INSERT (EmployeeID_NK, EmployeeName, Position, Department, HireDate, EffectiveDate, EndDate, IsCurrent)
+        VALUES (SRC.EmployeeID, SRC.EmployeeName, SRC.Position, SRC.Department, SRC.HireDate, @Today, NULL, 1)
+    WHEN MATCHED
+        AND IsCurrent = 1
+        AND (
+            ISNULL(DST.EmployeeName, '') <> ISNULL(SRC.EmployeeName, '') OR
+            ISNULL(DST.Position, '') <> ISNULL(SRC.Position, '') OR
+            ISNULL(DST.Department, '') <> ISNULL(SRC.Department, '')
+        )
+    THEN
+        UPDATE
+        SET
+            DST.IsCurrent = 0,
+            DST.EndDate = @Yesterday
+        OUTPUT SRC.EmployeeID, SRC.EmployeeName, SRC.Position, SRC.Department, SRC.HireDate, $Action AS MergeAction
+) AS MRG
+WHERE MRG.MergeAction = 'UPDATE';

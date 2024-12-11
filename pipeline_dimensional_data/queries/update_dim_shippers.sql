@@ -1,14 +1,17 @@
-USE $(DatabaseName);
+USE {database_name};
 GO
 
-MERGE INTO DimShippers AS target
+MERGE INTO {schema}.DimShippers AS target
 USING (
     SELECT
-        staging_raw_id,
-        ShipperID,
-        ShipperName,
-        Phone
-    FROM StagingShippers
+        ss.staging_raw_id,
+        ss.ShipperID,
+        ss.ShipperName,
+        ss.Phone,
+        ds.SORKey
+    FROM {schema}..StagingShippers ss
+    JOIN {schema}.Dim_SOR ds
+        ON ds.StagingTableName = 'StagingShippers'
 ) AS source
 ON target.ShipperID = source.ShipperID
 
@@ -19,9 +22,18 @@ WHEN MATCHED THEN
 
 WHEN NOT MATCHED BY TARGET
 THEN
-    INSERT (ShipperID, ShipperName, Phone)
-    VALUES (source.ShipperID, source.ShipperName, source.Phone)
-
-WHEN NOT MATCHED BY SOURCE
-THEN
-    DELETE;
+    INSERT (
+        ShipperID,
+        ShipperName,
+        Phone,
+        SORKey,
+        StagingRawID
+    )
+    VALUES (
+        source.ShipperID,
+        source.ShipperName,
+        source.Phone,
+        source.SORKey,
+        source.staging_raw_id
+    );
+GO
