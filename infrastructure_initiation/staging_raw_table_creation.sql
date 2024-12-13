@@ -1,9 +1,15 @@
+USE ORDER_DDS;
+
+DROP TABLE IF EXISTS staging_raw_Categories;
+
 CREATE TABLE staging_raw_Categories (
     staging_raw_id INT IDENTITY PRIMARY KEY,
     CategoryID INT,
     CategoryName VARCHAR(255),
     Description VARCHAR(255)
 );
+
+DROP TABLE IF EXISTS staging_raw_Customers;
 
 CREATE TABLE staging_raw_Customers (
     staging_raw_id INT IDENTITY PRIMARY KEY,
@@ -13,12 +19,14 @@ CREATE TABLE staging_raw_Customers (
     ContactTitle VARCHAR(255),
     Address VARCHAR(255),
     City VARCHAR(255),
-    Region INT,
+    Region VARCHAR(255),
     PostalCode VARCHAR(255),
     Country VARCHAR(255),
     Phone VARCHAR(255),
     Fax VARCHAR(255)
 );
+
+DROP TABLE IF EXISTS staging_raw_Employees;
 
 CREATE TABLE staging_raw_Employees (
     staging_raw_id INT IDENTITY PRIMARY KEY,
@@ -27,8 +35,8 @@ CREATE TABLE staging_raw_Employees (
     FirstName VARCHAR(255),
     Title VARCHAR(255),
     TitleOfCourtesy VARCHAR(255),
-    BirthDate DATETIME,
-    HireDate DATETIME,
+    BirthDate VARCHAR(10),
+    HireDate VARCHAR(10),
     Address VARCHAR(255),
     City VARCHAR(255),
     Region VARCHAR(255),
@@ -41,6 +49,8 @@ CREATE TABLE staging_raw_Employees (
     PhotoPath VARCHAR(255)
 );
 
+DROP TABLE IF EXISTS staging_raw_OrderDetails;
+
 CREATE TABLE staging_raw_OrderDetails (
     staging_raw_id INT IDENTITY PRIMARY KEY,
     OrderID INT,
@@ -50,14 +60,16 @@ CREATE TABLE staging_raw_OrderDetails (
     Discount INT
 );
 
+DROP TABLE IF EXISTS staging_raw_Orders;
+
 CREATE TABLE staging_raw_Orders (
     staging_raw_id INT IDENTITY PRIMARY KEY,
     OrderID INT,
     CustomerID VARCHAR(255),
     EmployeeID INT,
-    OrderDate DATETIME,
-    RequiredDate DATETIME,
-    ShippedDate DATETIME,
+    OrderDate VARCHAR(10),
+    RequiredDate VARCHAR(10),
+    ShippedDate VARCHAR(10),
     ShipVia INT,
     Freight INT,
     ShipName VARCHAR(255),
@@ -68,6 +80,8 @@ CREATE TABLE staging_raw_Orders (
     ShipCountry VARCHAR(255),
     TerritoryID INT
 );
+
+DROP TABLE IF EXISTS staging_raw_Products;
 
 CREATE TABLE staging_raw_Products (
     staging_raw_id INT IDENTITY PRIMARY KEY,
@@ -83,6 +97,8 @@ CREATE TABLE staging_raw_Products (
     Discontinued INT
 );
 
+DROP TABLE IF EXISTS staging_raw_Region;
+
 CREATE TABLE staging_raw_Region (
     staging_raw_id INT IDENTITY PRIMARY KEY,
     RegionID INT,
@@ -91,12 +107,16 @@ CREATE TABLE staging_raw_Region (
     RegionImportance VARCHAR(255)
 );
 
+DROP TABLE IF EXISTS staging_raw_Shippers;
+
 CREATE TABLE staging_raw_Shippers (
     staging_raw_id INT IDENTITY PRIMARY KEY,
     ShipperID INT,
     CompanyName VARCHAR(255),
     Phone VARCHAR(255)
 );
+
+DROP TABLE IF EXISTS staging_raw_Suppliers;
 
 CREATE TABLE staging_raw_Suppliers (
     staging_raw_id INT IDENTITY PRIMARY KEY,
@@ -113,6 +133,8 @@ CREATE TABLE staging_raw_Suppliers (
     Fax VARCHAR(255),
     HomePage VARCHAR(255)
 );
+
+DROP TABLE IF EXISTS staging_raw_Territories;
 
 CREATE TABLE staging_raw_Territories (
     staging_raw_id INT IDENTITY PRIMARY KEY,

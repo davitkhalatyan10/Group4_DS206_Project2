@@ -1,2 +1,3 @@
+USE master;
+
 CREATE DATABASE ORDER_DDS;
-GO

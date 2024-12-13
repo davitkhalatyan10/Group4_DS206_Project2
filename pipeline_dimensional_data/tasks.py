@@ -4,6 +4,7 @@ from c_logging import get_dimensional_logger, ExecutionLoggerAdapter
 import os
 import pandas as pd
 import traceback
+import numpy as np
 
 dimensional_logger = get_dimensional_logger(get_uuid())
 def connect_db_create_cursor(config_file, config_section):
@@ -11,10 +12,10 @@ def connect_db_create_cursor(config_file, config_section):
         db_conf = get_sql_config(config_file, config_section)
         
         db_conn_str = (
-            f"Driver={{{db_conf['Driver']}}};"
+            f"Driver={db_conf['Driver']};"
             f"Server={db_conf['Server']};"
             f"Database={db_conf['Database']};"
-            f"Trusted_Connection={db_conf['Trusted_Connection']};"
+            f"Trusted_Connection=yes;"
         )
         
         db_conn = pyodbc.connect(db_conn_str)
@@ -64,7 +65,6 @@ def create_tables(connection, cursor, execution_uuid):
     try:
         create_table_script = load_query("infrastructure_initiation", "staging_raw_table_creation.sql")
 
-        connection.autocommit = False
         cursor.execute(create_table_script)
         connection.commit()
 
@@ -74,8 +74,7 @@ def create_tables(connection, cursor, execution_uuid):
         )
 
         create_table_script = load_query("infrastructure_initiation", "dimensional_db_table_creation.sql")
-        
-        connection.autocommit = False
+
         cursor.execute(create_table_script)
         connection.commit()
         
@@ -137,13 +136,25 @@ def insert_into_table(connection, cursor, table_name, db, schema, start_date, en
         connection.autocommit = True
 
 
-def insert_into_staging(connection, execution_uuid):
-    excel_data = pd.ExcelFile('../raw_data_source.xlsx')
-    for name in excel_data.sheet_names:
-        table_name = f'staging_raw_{name}'
+def insert_into_staging(connection, cursor, table_name, execution_uuid):
+    df = pd.read_excel('raw_data_source.xlsx', sheet_name=table_name, header=0)
+
+    # Load the SQL script to insert into a table
+    columns = tuple(df.columns)
+    sql = f'''INSERT INTO staging_raw_{table_name} {columns} VALUES({','.join(['?'] * len(columns))});'''
+    if table_name == 'Categories':
+        df['Description'] = df['Description'].astype(str)
+
+    if table_name == "Employees":
+        df.sort_values(by='ReportsTo', ascending=True, na_position='first', inplace=True)
+        df['ReportsTo'] = df['ReportsTo'].astype("Int64")
+
+    df.replace({np.nan: None, np.inf: None, -np.inf: None}, inplace=True)
+
+    for _, row in df.iterrows():
         try:
-            df = excel_data.parse(name)
-            df.to_sql(table_name, con=connection, if_exists='replace', index=False)
+            cursor.execute(sql, *row)
+            connection.commit()
         except Exception as e:
             connection.rollback()
 

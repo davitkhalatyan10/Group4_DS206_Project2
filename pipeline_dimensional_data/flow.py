@@ -25,9 +25,13 @@ class DimensionalDataFlow:
             if not result.get('success'):
                 raise Exception(f"Create Tables Failed: {result.get('error')}")
 
-            result = tasks.insert_into_staging(connection, self.execution_uuid)
-            if not result.get('success'):
-                raise Exception(f"Insertion into Staging Tables Failed: {result.get('error')}")
+            staging_tables = ['Categories', 'Customers', 'Employees', 'Products', 'Region', 'Shippers', 'Suppliers',
+                              'Territories', 'Orders','OrderDetails']
+
+            for staging_table in staging_tables:
+                result = tasks.insert_into_staging(connection, cursor, staging_table, self.execution_uuid)
+                if not result.get('success'):
+                    raise Exception(f"Insertion into Staging Tables Failed: {result.get('error')}")
 
             tables = ['dim_categories', 'dim_customers', 'dim_employees', 'dim_products',
                                 'dim_region', 'dim_shippers', 'dim_suppliers', 'dim_territories', 'fact_orders', 'fact_error']
