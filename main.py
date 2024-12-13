@@ -2,21 +2,11 @@ import sys
 import argparse
 from pipeline_dimensional_data.flow import DimensionalDataFlow
 
+
 def parse_arguments():
-    parser = argparse.ArgumentParser(description="Execute the Dimensional Data Flow Pipeline.")
-    parser.add_argument(
-        "--start_date",
-        type=str,
-        required=True,
-        help="Start date for data ingestion (format: YYYY-MM-DD)."
-    )
-    parser.add_argument(
-        "--end_date",
-        type=str,
-        required=True,
-        help="End date for data ingestion (format: YYYY-MM-DD)."
-    )
-    return parser.parse_args()
+    start = input('Input Start Date in the following format (YYYY-mm-dd): ')
+    end = input('Input End Date in the following format (YYYY-mm-dd): ')
+    return start, end
 
 def main():
     args = parse_arguments()
@@ -24,8 +14,8 @@ def main():
     from datetime import datetime
 
     try:
-        start_date = datetime.strptime(args.start_date, "%Y-%m-%d").date()
-        end_date = datetime.strptime(args.end_date, "%Y-%m-%d").date()
+        start_date = datetime.strptime(args[0], "%Y-%m-%d").date()
+        end_date = datetime.strptime(args[1], "%Y-%m-%d").date()
     except ValueError as ve:
         print(f"Error: {ve}")
         sys.exit(1)

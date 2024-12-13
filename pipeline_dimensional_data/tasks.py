@@ -1,11 +1,11 @@
-from .config import SQL_SERVER_CONFIG_FILE
 import pyodbc
 from utils import load_query, get_sql_config, get_uuid
-from custom_logging import dimensional_logger
+from c_logging import get_dimensional_logger, ExecutionLoggerAdapter
 import os
+import pandas as pd
 import traceback
 
-
+dimensional_logger = get_dimensional_logger(get_uuid())
 def connect_db_create_cursor(config_file, config_section):
     try:
         db_conf = get_sql_config(config_file, config_section)
@@ -60,10 +60,20 @@ def create_database(connection, cursor, execution_uuid):
 
 
 
-def create_tables(connection, cursor, db, schema, execution_uuid):
+def create_tables(connection, cursor, execution_uuid):
     try:
-        # Create the tables
-        create_table_script = load_query("infrastructure_initiation", "dimensional_db_table_creation.sql").format(db=db, schema=schema)
+        create_table_script = load_query("infrastructure_initiation", "staging_raw_table_creation.sql")
+
+        connection.autocommit = False
+        cursor.execute(create_table_script)
+        connection.commit()
+
+        dimensional_logger.info(
+            msg=f"The staging tables in the database have been created.",
+            extra={"execution_uuid": execution_uuid}
+        )
+
+        create_table_script = load_query("infrastructure_initiation", "dimensional_db_table_creation.sql")
         
         connection.autocommit = False
         cursor.execute(create_table_script)
@@ -71,7 +81,7 @@ def create_tables(connection, cursor, db, schema, execution_uuid):
         
         # Log the creation of the tables
         dimensional_logger.info(
-            msg=f"The tables in the database {db}.{schema} have been created.",
+            msg=f"The dimensional tables in the database have been created.",
             extra={"execution_uuid": execution_uuid}
         )
         
@@ -80,7 +90,7 @@ def create_tables(connection, cursor, db, schema, execution_uuid):
         connection.rollback()
         
         dimensional_logger.error(
-            msg=f"Failed to create tables in the database {db}.{schema}.",
+            msg=f"Failed to create tables in the database.",
             extra={"execution_uuid": execution_uuid, "error": str(e)}
         )
         
@@ -90,14 +100,12 @@ def create_tables(connection, cursor, db, schema, execution_uuid):
 
 
 
-def insert_into_fact_table(connection, cursor, table_name, src_db, src_schema, dst_db, dst_schema, start_date, end_date, execution_uuid):
+def insert_into_table(connection, cursor, table_name, db, schema, start_date, end_date, execution_uuid):
     try:
         insert_script_filename = f"update_{table_name}.sql"
         insert_into_fact_table_script = load_query("pipeline_dimensional_data/queries", insert_script_filename).format(
-            src_db=src_db,
-            src_schema=src_schema,
-            dst_db=dst_db,
-            dst_schema=dst_schema,
+            database_name=db,
+            schema=schema,
             start_date=start_date,
             end_date=end_date
         )
@@ -107,7 +115,7 @@ def insert_into_fact_table(connection, cursor, table_name, src_db, src_schema, d
         connection.commit()
         
         dimensional_logger.info(
-            msg=f"Data has been inserted into/updated the {dst_db}.{dst_schema}.{table_name} table from {src_db}.{src_schema}.",
+            msg=f"Data has been inserted into/updated the {db}.{schema}.{table_name} table from {db}.{schema}.",
             extra={"execution_uuid": execution_uuid}
         )
         
@@ -116,7 +124,7 @@ def insert_into_fact_table(connection, cursor, table_name, src_db, src_schema, d
         connection.rollback()
         
         dimensional_logger.error(
-            msg=f"Failed to insert data into/updated the {dst_db}.{dst_schema}.{table_name} table. Error: {str(e)}",
+            msg=f"Failed to insert data into/updated the {db}.{schema}.{table_name} table. Error: {str(e)}",
             extra={"execution_uuid": execution_uuid}
         )
         dimensional_logger.debug(
@@ -127,3 +135,26 @@ def insert_into_fact_table(connection, cursor, table_name, src_db, src_schema, d
         return {'success': False, 'error': str(e)}
     finally:
         connection.autocommit = True
+
+
+def insert_into_staging(connection, execution_uuid):
+    excel_data = pd.ExcelFile('../raw_data_source.xlsx')
+    for name in excel_data.sheet_names:
+        table_name = f'staging_raw_{name}'
+        try:
+            df = excel_data.parse(name)
+            df.to_sql(table_name, con=connection, if_exists='replace', index=False)
+        except Exception as e:
+            connection.rollback()
+
+            dimensional_logger.error(
+                msg=f"Failed to insert data into/updated the {table_name} table. Error: {str(e)}",
+                extra={"execution_uuid": execution_uuid}
+            )
+            dimensional_logger.debug(
+                msg="Traceback: " + traceback.format_exc(),
+                extra={"execution_uuid": execution_uuid}
+            )
+            return {'success': False, 'error': str(e)}
+        finally:
+            connection.autocommit = True
