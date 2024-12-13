@@ -1,5 +1,4 @@
 USE {database_name};
-GO
 
 MERGE INTO {schema}.DimShippers AS target
 USING (
@@ -36,4 +35,3 @@ THEN
         source.SORKey,
         source.staging_raw_id
     );
-GO

@@ -1,5 +1,4 @@
 USE {database_name};
-GO
 
 MERGE INTO {schema}.DimRegion AS target
 USING (
@@ -32,5 +31,4 @@ THEN
         source.SORKey,
         source.staging_raw_id
     );
-GO
 

@@ -1,5 +1,4 @@
 USE {database_name};
-GO
 
 MERGE INTO {schema}.DimCustomers AS target
 USING (
@@ -141,4 +140,3 @@ INNER JOIN {schema}.DimCustomers AS target
     ON hist.DimCustomers_ID_SK_PK = target.DimCustomers_ID_SK_PK
 WHERE hist.ValidTo IS NULL;
 
-GO

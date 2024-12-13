@@ -1,5 +1,4 @@
 USE {database_name};
-GO
 
 DECLARE @suppliers_SCD4 TABLE
 (

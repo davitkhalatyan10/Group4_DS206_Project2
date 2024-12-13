@@ -46,8 +46,8 @@ class DimensionalDataFlow:
                     end_date=end_date,
                     execution_uuid=self.execution_uuid
                 )
-            if not result.get('success'):
-                raise Exception(f"Ingest Dimension Tables Failed: {result.get('error')}")
+                if not result.get('success'):
+                    raise Exception(f"Ingest Dimension Tables Failed: {result.get('error')}")
 
             self.logger.info("Dimensional Data Flow executed successfully.")
 

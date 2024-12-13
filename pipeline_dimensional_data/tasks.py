@@ -5,6 +5,7 @@ import os
 import pandas as pd
 import traceback
 import numpy as np
+import re
 
 dimensional_logger = get_dimensional_logger(get_uuid())
 def connect_db_create_cursor(config_file, config_section):
@@ -140,8 +141,9 @@ def insert_into_staging(connection, cursor, table_name, execution_uuid):
     df = pd.read_excel('raw_data_source.xlsx', sheet_name=table_name, header=0)
 
     # Load the SQL script to insert into a table
-    columns = tuple(df.columns)
-    sql = f'''INSERT INTO staging_raw_{table_name} {columns} VALUES({','.join(['?'] * len(columns))});'''
+    columns = ', '.join(df.columns)
+    placeholders = ', '.join(['?'] * len(df.columns))
+    sql = f'''INSERT INTO staging_raw_{table_name} ({columns}) VALUES ({placeholders});'''
     if table_name == 'Categories':
         df['Description'] = df['Description'].astype(str)
 
@@ -149,11 +151,16 @@ def insert_into_staging(connection, cursor, table_name, execution_uuid):
         df.sort_values(by='ReportsTo', ascending=True, na_position='first', inplace=True)
         df['ReportsTo'] = df['ReportsTo'].astype("Int64")
 
+    for column in df.columns:
+        if 'Date' in column:
+            df[column] = pd.to_datetime(df[column], format='%Y%m%d').dt.date
+
+
     df.replace({np.nan: None, np.inf: None, -np.inf: None}, inplace=True)
 
     for _, row in df.iterrows():
         try:
-            cursor.execute(sql, *row)
+            cursor.execute(sql, tuple(row))
             connection.commit()
         except Exception as e:
             connection.rollback()
@@ -169,3 +176,4 @@ def insert_into_staging(connection, cursor, table_name, execution_uuid):
             return {'success': False, 'error': str(e)}
         finally:
             connection.autocommit = True
+    return {'success': True}

@@ -1,5 +1,4 @@
 USE {database_name};
-GO
 
 MERGE INTO {schema}.DimProducts AS target
 USING (
@@ -48,4 +47,3 @@ THEN
 WHEN NOT MATCHED BY SOURCE
 THEN
     DELETE;
-GO

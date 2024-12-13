@@ -52,7 +52,7 @@ CREATE TABLE DimEmployees (
     Country VARCHAR(255),
     HomePhone VARCHAR(255),
     Extension VARCHAR(255),
-    Notes VARCHAR(255),
+    Notes VARCHAR(511),
     ReportsTo VARCHAR(255),
     PhotoPath VARCHAR(255),
     EffectiveDate VARCHAR(255),
@@ -166,19 +166,19 @@ CREATE TABLE FactOrders (
     Quantity VARCHAR(255),
     Discount VARCHAR(255),
     CustomerID VARCHAR(255),
-    EmployeeID VARCHAR(255),
-    OrderDate VARCHAR(255),
-    RequiredDate VARCHAR(255),
-    ShippedDate VARCHAR(255),
-    ShipVia VARCHAR(255),
-    Freight VARCHAR(255),
+    EmployeeID INT,
+    OrderDate DATE,
+    RequiredDate DATE,
+    ShippedDate DATE,
+    ShipVia INT,
+    Freight NUMERIC,
     ShipName VARCHAR(255),
     ShipAddress VARCHAR(255),
     ShipCity VARCHAR(255),
     ShipRegion VARCHAR(255),
     ShipPostalCode VARCHAR(255),
     ShipCountry VARCHAR(255),
-    TerritoryID VARCHAR(255)
+    TerritoryID INT
 );
 
 DROP TABLE IF EXISTS fact_error;
@@ -193,19 +193,19 @@ CREATE TABLE fact_error(
     Quantity VARCHAR(255),
     Discount VARCHAR(255),
     CustomerID VARCHAR(255),
-    EmployeeID VARCHAR(255),
-    OrderDate VARCHAR(255),
-    RequiredDate VARCHAR(255),
-    ShippedDate VARCHAR(255),
-    ShipVia VARCHAR(255),
-    Freight VARCHAR(255),
+    EmployeeID INT,
+    OrderDate DATE,
+    RequiredDate DATE,
+    ShippedDate DATE,
+    ShipVia INT,
+    Freight NUMERIC,
     ShipName VARCHAR(255),
     ShipAddress VARCHAR(255),
     ShipCity VARCHAR(255),
     ShipRegion VARCHAR(255),
     ShipPostalCode VARCHAR(255),
     ShipCountry VARCHAR(255),
-    TerritoryID VARCHAR(255)
+    TerritoryID INT
 );
 
 DROP TABLE IF EXISTS Dim_SOR;

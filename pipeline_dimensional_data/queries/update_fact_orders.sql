@@ -1,9 +1,8 @@
 USE {database_name};
-GO
 
 -- Declare parameters
-DECLARE @start_date DATE = {start_date};
-DECLARE @end_date DATE = {end_date};
+--DECLARE @start_date DATE = CAST({start_date} AS DATE);
+--DECLARE @end_date DATE = CAST({end_date} AS DATE);
 
 -- Insert valid rows into the Fact table
 INSERT INTO {schema}.FactOrders (
@@ -32,11 +31,11 @@ INSERT INTO {schema}.FactOrders (
 SELECT
     od.staging_raw_id,
     CONCAT(
-        COALESCE(ds_orders.SOR_Key, ''),
+        COALESCE(ds_orders.staging_raw_id, ''),
         '_',
-        COALESCE(ds_details.SOR_Key, '')
+        COALESCE(ds_details.staging_raw_id, '')
     ) AS Dim_SOR_ID, -- Concatenated SORKey
-    o.OrderID_NK,
+    o.OrderID,
     od.ProductID,
     od.UnitPrice,
     od.Quantity,
@@ -55,13 +54,11 @@ SELECT
     o.ShipPostalCode,
     o.ShipCountry,
     o.TerritoryID
-FROM {schema}.StagingOrders o
-LEFT JOIN {schema}.StagingOrderDetails od
-    ON o.OrderID_NK = od.OrderID_NK
+FROM {schema}.staging_raw_Orders o
+LEFT JOIN {schema}.staging_raw_OrderDetails od
+    ON o.OrderID = od.OrderID
 JOIN {schema}.Dim_SOR ds_orders
-    ON ds_orders.Staging_Raw_Table_Name = 'StagingOrders'
+    ON ds_orders.Staging_Raw_Table_Name = 'staging_raw_Orders'
 JOIN {schema}.Dim_SOR ds_details
-    ON ds_details.Staging_Raw_Table_Name = 'StagingOrderDetails'
-WHERE o.OrderDate BETWEEN @start_date AND @end_date;
-
-GO
+    ON ds_details.Staging_Raw_Table_Name = 'staging_raw_OrderDetails';
+/*WHERE CAST(o.OrderDate AS DATE) BETWEEN @start_date AND @end_date;*/

@@ -1,5 +1,4 @@
 USE {database_name};
-GO
 
 DECLARE @Today DATE = CONVERT(DATE, GETDATE());
 DECLARE @Yesterday DATE = CONVERT(DATE, DATEADD(DAY, -1, @Today));

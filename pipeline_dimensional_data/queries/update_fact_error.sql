@@ -1,9 +1,8 @@
 USE {database_name};
-GO
 
 -- Declare parameters
-DECLARE @start_date DATE = {start_date};
-DECLARE @end_date DATE = {end_date};
+--DECLARE @start_date DATE = {start_date};
+--DECLARE @end_date DATE = {end_date};
 
 -- Insert faulty rows into FactError table
 INSERT INTO {schema}.FactError (
@@ -62,5 +61,4 @@ LEFT JOIN {schema}.DimEmployees de
     ON sr.EmployeeID = de.EmployeeID_NK
 LEFT JOIN {schema}.DimShippers ds
     ON sr.ShipVia = ds.ShipperID_NK
-WHERE sr.OrderDate BETWEEN @start_date AND @end_date
-  AND (dc.CustomerID_NK IS NULL OR dp.ProductID_NK IS NULL OR dt.TerritoryID_NK IS NULL OR de.EmployeeID_NK IS NULL OR ds.ShipperID_NK IS NULL);
+WHERE (dc.CustomerID_NK IS NULL OR dp.ProductID_NK IS NULL OR dt.TerritoryID_NK IS NULL OR de.EmployeeID_NK IS NULL OR ds.ShipperID_NK IS NULL);
