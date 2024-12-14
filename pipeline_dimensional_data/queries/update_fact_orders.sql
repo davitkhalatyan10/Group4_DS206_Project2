@@ -31,9 +31,9 @@ INSERT INTO {schema}.FactOrders (
 SELECT
     od.staging_raw_id,
     CONCAT(
-        COALESCE(ds_orders.staging_raw_id, ''),
+        COALESCE(ds_orders.Dim_SOR_ID_SK_PK, ''),
         '_',
-        COALESCE(ds_details.staging_raw_id, '')
+        COALESCE(ds_details.Dim_SOR_ID_SK_PK, '')
     ) AS Dim_SOR_ID, -- Concatenated SORKey
     o.OrderID,
     od.ProductID,

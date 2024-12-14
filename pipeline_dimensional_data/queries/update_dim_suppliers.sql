@@ -1,8 +1,9 @@
 USE {database_name};
 
+DECLARE @Now DATETIME2(3) = GETDATE();
+
 DECLARE @suppliers_SCD4 TABLE
 (
-    DimSuppliers_ID_SK_PK INT NULL,
     DimSuppliers_ID_SK_PK_Durable INT NULL,
     SupplierID_NK VARCHAR(255) NULL,
     CompanyName VARCHAR(255) NULL,
@@ -16,42 +17,46 @@ DECLARE @suppliers_SCD4 TABLE
     HomePage VARCHAR(255) NULL,
     staging_raw_id INT NULL,
     Dim_SOR_ID INT NULL,
-    MergeAction VARCHAR(10) NULL
+    MergeAction VARCHAR(10) NULL,
+    OldValidFrom DATETIME2(3) NULL
 );
 
--- Merge statement
 MERGE {schema}.DimSuppliersCurrent AS DST
-USING {schema}.Staging_Suppliers AS SRC
-ON (SRC.SupplierID_NK = DST.SupplierID_NK)
+USING {schema}.staging_raw_Suppliers AS SRC
+    INNER JOIN {schema}.Dim_SOR AS SOR
+    ON SOR.Staging_Raw_Table_Name = 'staging_raw_Suppliers'  -- Join with Dim_SOR to get Dim_SOR_ID
+ON (SRC.SupplierID = DST.SupplierID_NK)
 
 WHEN NOT MATCHED THEN
     INSERT (
-        staging_raw_id, 
-        Dim_SOR_ID, 
-        SupplierID_NK, 
-        CompanyName, 
-        Address, 
-        City, 
-        Region, 
-        PostalCode, 
-        Country, 
-        Phone, 
-        Fax, 
-        HomePage
+        staging_raw_id,
+        Dim_SOR_ID,
+        SupplierID_NK,
+        CompanyName,
+        Address,
+        City,
+        Region,
+        PostalCode,
+        Country,
+        Phone,
+        Fax,
+        HomePage,
+        ValidFrom
     )
     VALUES (
-        SRC.staging_raw_id, 
-        SRC.Dim_SOR_ID, 
-        SRC.SupplierID_NK, 
-        SRC.CompanyName, 
-        SRC.Address, 
-        SRC.City, 
-        SRC.Region, 
-        SRC.PostalCode, 
-        SRC.Country, 
-        SRC.Phone, 
-        SRC.Fax, 
-        SRC.HomePage
+        SRC.staging_raw_id,
+        SOR.Dim_SOR_ID_SK_PK,
+        SRC.SupplierID,
+        SRC.CompanyName,
+        SRC.Address,
+        SRC.City,
+        SRC.Region,
+        SRC.PostalCode,
+        SRC.Country,
+        SRC.Phone,
+        SRC.Fax,
+        SRC.HomePage,
+        @Now
     )
 
 WHEN MATCHED
@@ -79,10 +84,10 @@ THEN
         DST.Fax = SRC.Fax,
         DST.HomePage = SRC.HomePage,
         DST.staging_raw_id = SRC.staging_raw_id,
-        DST.Dim_SOR_ID = SRC.Dim_SOR_ID
-
+        DST.Dim_SOR_ID = SOR.Dim_SOR_ID_SK_PK,
+        DST.ValidFrom = @Now
 OUTPUT
-    DELETED.DimSuppliersCurrent_ID_SK_PK_Durable,
+    DELETED.DimSuppliersCurrent_ID_SK_PK_Durable AS DimSuppliers_ID_SK_PK_Durable,
     DELETED.SupplierID_NK,
     DELETED.CompanyName,
     DELETED.Address,
@@ -95,39 +100,26 @@ OUTPUT
     DELETED.HomePage,
     DELETED.staging_raw_id,
     DELETED.Dim_SOR_ID,
-    $Action AS MergeAction
-INTO @suppliers_SCD4 (
-    DimSuppliers_ID_SK_PK, 
-    SupplierID_NK, 
-    CompanyName, 
-    Address, 
-    City, 
-    Region, 
-    PostalCode, 
-    Country, 
-    Phone, 
-    Fax, 
-    HomePage, 
-    staging_raw_id, 
-    Dim_SOR_ID, 
-    MergeAction
-);
+    $Action AS MergeAction,
+    DELETED.ValidFrom AS OldValidFrom
+INTO @suppliers_SCD4;
 
--- Insert historical records into DimSuppliersHistory
 INSERT INTO dbo.DimSuppliersHistory (
-    staging_raw_id, 
-    Dim_SOR_ID, 
-    SupplierID_NK, 
-    CompanyName, 
-    Address, 
-    City, 
-    Region, 
-    PostalCode, 
-    Country, 
-    Phone, 
-    Fax, 
-    HomePage, 
-    DimSuppliers_ID_SK_Durable
+    staging_raw_id,
+    Dim_SOR_ID,
+    SupplierID_NK,
+    CompanyName,
+    Address,
+    City,
+    Region,
+    PostalCode,
+    Country,
+    Phone,
+    Fax,
+    HomePage,
+    DimSuppliers_ID_SK_Durable,
+    ValidFrom,
+    ValidTo
 )
 SELECT
     staging_raw_id,
@@ -142,14 +134,8 @@ SELECT
     Phone,
     Fax,
     HomePage,
-    DimSuppliers_ID_SK_PK
+    DimSuppliers_ID_SK_PK_Durable,
+    OldValidFrom,
+    @Now
 FROM @suppliers_SCD4
-WHERE MergeAction = 'DELETE';
-
--- Update history table with final date and flag
-UPDATE H
-SET H.DimSuppliers_ID_SK_Durable = NULL
-FROM dbo.DimSuppliersHistory H
-JOIN @suppliers_SCD4 TMP
-    ON H.SupplierID_NK = TMP.SupplierID_NK
-WHERE H.DimSuppliers_ID_SK_Durable IS NULL;
+WHERE MergeAction = 'UPDATE';

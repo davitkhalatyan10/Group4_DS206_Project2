@@ -5,33 +5,33 @@ USING (
     SELECT
         ss.staging_raw_id,
         ss.ShipperID,
-        ss.ShipperName,
+        ss.CompanyName,
         ss.Phone,
-        ds.SORKey
-    FROM {schema}..StagingShippers ss
+        ds.Dim_SOR_ID_SK_PK
+    FROM {schema}.staging_raw_Shippers ss
     JOIN {schema}.Dim_SOR ds
-        ON ds.StagingTableName = 'StagingShippers'
+        ON ds.Staging_Raw_Table_Name = 'staging_raw_Shippers'
 ) AS source
-ON target.ShipperID = source.ShipperID
+ON target.ShipperID_NK = source.ShipperID
 
 WHEN MATCHED THEN
     UPDATE SET
-        target.ShipperName = source.ShipperName,
+        target.CompanyName = source.CompanyName,
         target.Phone = source.Phone
 
 WHEN NOT MATCHED BY TARGET
 THEN
     INSERT (
-        ShipperID,
-        ShipperName,
+        ShipperID_NK,
+        CompanyName,
         Phone,
-        SORKey,
-        StagingRawID
+        Dim_SOR_ID,
+        staging_raw_id
     )
     VALUES (
         source.ShipperID,
-        source.ShipperName,
+        source.CompanyName,
         source.Phone,
-        source.SORKey,
+        source.Dim_SOR_ID_SK_PK,
         source.staging_raw_id
     );
