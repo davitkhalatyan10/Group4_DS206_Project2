@@ -5,7 +5,7 @@ USE {database_name};
 --DECLARE @end_date DATE = {end_date};
 
 -- Insert faulty rows into FactError table
-INSERT INTO {schema}.FactError (
+INSERT INTO {schema}.fact_error (
     staging_raw_id,
     Dim_SOR_ID,
     OrderID_NK,

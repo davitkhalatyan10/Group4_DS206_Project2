@@ -9,12 +9,12 @@ USING (
         sp.SupplierID,
         sp.CategoryID,
         sp.UnitPrice,
-        ds.SORKey
-    FROM {schema}..StagingProducts sp
-    JOIN {schema}..Dim_SOR ds
-        ON ds.StagingTableName = 'StagingProducts'
+        ds.Dim_SOR_ID_SK_PK
+    FROM {schema}.staging_raw_Products sp
+    JOIN {schema}.Dim_SOR ds
+        ON ds.Staging_Raw_Table_Name = 'staging_raw_Products'
 ) AS source
-ON target.ProductID = source.ProductID
+ON target.ProductID_NK = source.ProductID
 
 WHEN MATCHED THEN
     UPDATE SET
@@ -26,13 +26,13 @@ WHEN MATCHED THEN
 WHEN NOT MATCHED BY TARGET
 THEN
     INSERT (
-        ProductID,
+        ProductID_NK,
         ProductName,
         SupplierID,
         CategoryID,
         UnitPrice,
-        SORKey,
-        StagingRawID
+        Dim_SOR_ID,
+        staging_raw_id
     )
     VALUES (
         source.ProductID,
@@ -40,7 +40,7 @@ THEN
         source.SupplierID,
         source.CategoryID,
         source.UnitPrice,
-        source.SORKey,
+        source.Dim_SOR_ID_SK_PK,
         source.staging_raw_id
     )
 

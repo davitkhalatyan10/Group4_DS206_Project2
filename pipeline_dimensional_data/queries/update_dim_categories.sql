@@ -7,12 +7,12 @@ USING (
         sc.CategoryID,
         sc.CategoryName,
         sc.Description,
-        ds.SORKey
-    FROM {schema}.StagingCategories sc
+        ds.Dim_SOR_ID_SK_PK
+    FROM {schema}.staging_raw_Categories sc
     JOIN {schema}.Dim_SOR ds
-        ON ds.StagingTableName = 'StagingCategories'
+        ON ds.Staging_Raw_Table_Name = 'staging_raw_Categories'
 ) AS source
-ON target.CategoryID = source.CategoryID
+ON target.CategoryID_NK = source.CategoryID
 
 WHEN MATCHED THEN
     UPDATE SET
@@ -21,17 +21,17 @@ WHEN MATCHED THEN
 WHEN NOT MATCHED BY TARGET
 THEN
     INSERT (
-        CategoryID,
+        CategoryID_NK,
         CategoryName,
         Description,
-        SORKey,
-        StagingRawID
+        Dim_SOR_ID,
+        staging_raw_id
     )
     VALUES (
         source.CategoryID,
         source.CategoryName,
         source.Description,
-        source.SORKey,
+        source.Dim_SOR_ID_SK_PK,
         source.staging_raw_id
     )
 

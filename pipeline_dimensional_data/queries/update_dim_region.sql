@@ -6,12 +6,14 @@ USING (
         sr.staging_raw_id,
         sr.RegionID,
         sr.RegionDescription,
-        ds.SORKey
-    FROM {schema}.StagingRegion sr
+        sr.RegionCategory,
+        sr.RegionImportance,
+        ds.Dim_SOR_ID_SK_PK
+    FROM {schema}.staging_raw_Region sr
     JOIN {schema}.Dim_SOR ds
-        ON ds.StagingTableName = 'StagingRegion'
+        ON ds.Staging_Raw_Table_Name = 'staging_raw_Region'
 ) AS source
-ON target.RegionID = source.RegionID
+ON target.RegionID_NK = source.RegionID
 
 WHEN MATCHED THEN
     UPDATE SET
@@ -20,15 +22,19 @@ WHEN MATCHED THEN
 WHEN NOT MATCHED BY TARGET
 THEN
     INSERT (
-        RegionID,
+        RegionID_NK,
         RegionDescription,
-        SORKey,
-        StagingRawID
+        RegionCategory,
+        RegionImportance,
+        Dim_SOR_ID,
+        staging_raw_id
     )
     VALUES (
         source.RegionID,
         source.RegionDescription,
-        source.SORKey,
+        source.RegionDescription,
+        source.RegionCategory,
+        source.Dim_SOR_ID_SK_PK,
         source.staging_raw_id
     );
 
