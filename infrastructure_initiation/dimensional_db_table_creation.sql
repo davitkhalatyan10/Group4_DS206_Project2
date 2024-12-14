@@ -101,6 +101,8 @@ CREATE TABLE DimShippers (
     Phone VARCHAR(255)
 );
 
+DROP TABLE IF EXISTS DimSuppliersCurrent;
+
 CREATE TABLE DimSuppliersCurrent (
     DimSuppliersCurrent_ID_SK_PK_Durable INT IDENTITY PRIMARY KEY,
     staging_raw_id INT,
@@ -115,8 +117,10 @@ CREATE TABLE DimSuppliersCurrent (
     Phone VARCHAR(255),
     Fax VARCHAR(255),
     HomePage VARCHAR(255),
-    ValidFrom DATETIME2(3) NOT NULL DEFAULT(GETDATE())
+    ValidFrom DATE NOT NULL DEFAULT(GETDATE())
 );
+
+DROP TABLE IF EXISTS DimSuppliersHistory;
 
 CREATE TABLE DimSuppliersHistory (
     DimSuppliers_ID_SK_PK INT IDENTITY PRIMARY KEY,
@@ -133,8 +137,8 @@ CREATE TABLE DimSuppliersHistory (
     Fax VARCHAR(255),
     HomePage VARCHAR(255),
     DimSuppliers_ID_SK_Durable INT,
-    ValidFrom DATETIME2(3),
-    ValidTo DATETIME2(3)
+    ValidFrom DATE,
+    ValidTo DATE
 );
 
 DROP TABLE IF EXISTS DimTerritories;
