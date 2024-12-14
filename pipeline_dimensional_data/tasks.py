@@ -37,7 +37,7 @@ def create_database(connection, cursor, execution_uuid):
         # Create a database
         create_database_script = load_query("infrastructure_initiation", "dimensional_db_creation.sql")
         
-        connection.autocommit = False
+        connection.autocommit = True
         cursor.execute(create_database_script)
         connection.commit()
         
