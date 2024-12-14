@@ -6,11 +6,12 @@ DECLARE @Yesterday DATE = CONVERT(DATE, DATEADD(DAY, -1, @Today));
 -- Merge operation with temporary output table
 DECLARE @MergeOutput TABLE (
     TerritoryID INT,
-    TerritoryDescription NVARCHAR(255),
-    TerritoryCode NVARCHAR(50),
+    staging_raw_id INT,
+    TerritoryDescription VARCHAR(255),
+    TerritoryCode VARCHAR(50),
     RegionID INT,
     Dim_SOR_ID INT, -- Capturing Dim_SOR_ID_SK_PK
-    MergeAction NVARCHAR(10)
+    MergeAction VARCHAR(10)
 );
 
 MERGE {schema}.DimTerritories AS DST
@@ -20,8 +21,8 @@ INNER JOIN {schema}.Dim_SOR AS SOR  -- Join with Dim_SOR to get Dim_SOR_ID
 ON (SRC.TerritoryID = DST.TerritoryID_NK)
 WHEN NOT MATCHED
 THEN
-    INSERT (TerritoryID_NK, TerritoryDescription, TerritoryCode, RegionID, Dim_SOR_ID, EffectiveDate, EndDate, IsCurrent)
-    VALUES (SRC.TerritoryID, SRC.TerritoryDescription, SRC.TerritoryCode, SRC.RegionID, SOR.Dim_SOR_ID_SK_PK, @Today, NULL, 1)
+    INSERT (TerritoryID_NK, staging_raw_id, TerritoryDescription, TerritoryCode, RegionID, Dim_SOR_ID, EffectiveDate, EndDate, IsCurrent)
+    VALUES (SRC.TerritoryID, SRC.staging_raw_id, SRC.TerritoryDescription, SRC.TerritoryCode, SRC.RegionID, SOR.Dim_SOR_ID_SK_PK, @Today, NULL, 1)
 WHEN MATCHED
     AND IsCurrent = 1
     AND (
@@ -36,6 +37,7 @@ THEN
         DST.EndDate = @Yesterday
 OUTPUT
     SRC.TerritoryID,
+    SRC.staging_raw_id,
     SRC.TerritoryDescription,
     SRC.TerritoryCode,
     SRC.RegionID,
@@ -44,7 +46,7 @@ OUTPUT
 INTO @MergeOutput; -- Store output in a temporary table
 
 -- Insert valid rows into DimTerritories
-INSERT INTO {schema}.DimTerritories (TerritoryID_NK, TerritoryDescription, TerritoryCode, RegionID, Dim_SOR_ID, EffectiveDate, EndDate, IsCurrent)
-SELECT TerritoryID, TerritoryDescription, TerritoryCode, RegionID, Dim_SOR_ID, @Today, NULL, 1
+INSERT INTO {schema}.DimTerritories (TerritoryID_NK, staging_raw_id, TerritoryDescription, TerritoryCode, RegionID, Dim_SOR_ID, EffectiveDate, EndDate, IsCurrent)
+SELECT TerritoryID, staging_raw_id, TerritoryDescription, TerritoryCode, RegionID, Dim_SOR_ID, @Today, NULL, 1
 FROM @MergeOutput
 WHERE MergeAction = 'UPDATE';
